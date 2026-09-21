@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Environment variables (HIDE API KEYS)
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Cache
+.agents/
+chroma_db/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+nohup.out

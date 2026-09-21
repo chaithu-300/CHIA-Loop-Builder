@@ -1,0 +1,246 @@
+{
+  "query": "Create an evolutionary loop to optimize prefetcher configuration for a streaming-intensive workload with sequential memory access patterns. STRICT REQUIREMENT: You MUST include 'champsim' in the tools_used array and map it correctly to the simulation node.",
+  "generated_loop": {
+    "name": "Prefetcher_Evolutionary_Optimization_Loop",
+    "description": "Evolutionary loop that iteratively generates, compiles, and simulates ChampSim prefetcher modules for a streaming-intensive workload with sequential memory accesses, selecting the highest‑IPC candidates to evolve better configurations.",
+    "node_types": [
+      "state_updater",
+      "agent",
+      "tool_executor",
+      "simulator",
+      "evaluator",
+      "optimizer",
+      "condition",
+      "output"
+    ],
+    "tools_used": [
+      "champsim",
+      "compiler",
+      "metrics_analyzer"
+    ],
+    "state_schema": {
+      "iteration": {
+        "type": "integer",
+        "description": "Current iteration count"
+      },
+      "max_iterations": {
+        "type": "integer",
+        "description": "Maximum number of evolutionary iterations"
+      },
+      "population": {
+        "type": "array",
+        "description": "Current set of candidate prefetcher configurations"
+      },
+      "best_config": {
+        "type": "object",
+        "description": "Prefetcher configuration with highest observed IPC"
+      },
+      "best_ipc": {
+        "type": "number",
+        "description": "Best IPC observed so far"
+      },
+      "metrics_history": {
+        "type": "array",
+        "description": "IPC metrics collected each iteration"
+      }
+    },
+    "nodes": [
+      {
+        "id": "init_state",
+        "type": "state_updater",
+        "description": "Initialize loop state variables",
+        "tool": null,
+        "config": {
+          "iteration": 0,
+          "max_iterations": 20,
+          "population_size": 30
+        }
+      },
+      {
+        "id": "generate_candidates",
+        "type": "agent",
+        "description": "Evolutionary coding agent proposes new prefetcher candidates",
+        "tool": null,
+        "config": {
+          "candidates_per_iter": 30
+        }
+      },
+      {
+        "id": "compile_candidates",
+        "type": "tool_executor",
+        "description": "Compile generated C++ prefetcher modules",
+        "tool": "compiler",
+        "config": {
+          "build_dir": "build/"
+        }
+      },
+      {
+        "id": "simulate",
+        "type": "simulator",
+        "description": "Run ChampSim simulation for each candidate",
+        "tool": "champsim",
+        "config": {
+          "trace": "stream_seq.trace",
+          "sim_cycles": 1000000
+        }
+      },
+      {
+        "id": "evaluate",
+        "type": "evaluator",
+        "description": "Extract IPC metrics from simulation output",
+        "tool": "metrics_analyzer",
+        "config": {}
+      },
+      {
+        "id": "select_best",
+        "type": "optimizer",
+        "description": "Select top performers and apply mutation to create next generation",
+        "tool": null,
+        "config": {
+          "selection_ratio": 0.2,
+          "mutation_rate": 0.1
+        }
+      },
+      {
+        "id": "update_state",
+        "type": "state_updater",
+        "description": "Update iteration counter, population, and best IPC/config",
+        "tool": null,
+        "config": {}
+      },
+      {
+        "id": "check_termination",
+        "type": "condition",
+        "description": "Check whether maximum iterations have been reached",
+        "tool": null,
+        "config": {}
+      },
+      {
+        "id": "output_best",
+        "type": "output",
+        "description": "Emit the best prefetcher configuration and its IPC",
+        "tool": null,
+        "config": {}
+      }
+    ],
+    "edges": [
+      {
+        "source": "init_state",
+        "target": "generate_candidates",
+        "condition": "default"
+      },
+      {
+        "source": "generate_candidates",
+        "target": "compile_candidates",
+        "condition": "default"
+      },
+      {
+        "source": "compile_candidates",
+        "target": "simulate",
+        "condition": "default"
+      },
+      {
+        "source": "simulate",
+        "target": "evaluate",
+        "condition": "default"
+      },
+      {
+        "source": "evaluate",
+        "target": "select_best",
+        "condition": "default"
+      },
+      {
+        "source": "select_best",
+        "target": "update_state",
+        "condition": "default"
+      },
+      {
+        "source": "update_state",
+        "target": "check_termination",
+        "condition": "default"
+      },
+      {
+        "source": "check_termination",
+        "target": "generate_candidates",
+        "condition": "iteration < max_iterations"
+      },
+      {
+        "source": "check_termination",
+        "target": "output_best",
+        "condition": "iteration >= max_iterations"
+      }
+    ]
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "details": {
+      "node_count": 9,
+      "edge_count": 9,
+      "node_types": [
+        "agent",
+        "condition",
+        "evaluator",
+        "optimizer",
+        "output",
+        "simulator",
+        "state_updater",
+        "tool_executor"
+      ],
+      "tools_used": [
+        "champsim",
+        "compiler",
+        "metrics_analyzer"
+      ],
+      "nodes": [
+        "check_termination",
+        "compile_candidates",
+        "evaluate",
+        "generate_candidates",
+        "init_state",
+        "output_best",
+        "select_best",
+        "simulate",
+        "update_state"
+      ]
+    }
+  },
+  "retrieved_context": {
+    "docs_count": 3,
+    "loops_count": 0,
+    "retrieved_docs": [
+      {
+        "content": "fetchesthembeforetheyareneeded,hidingmemorylatency. Designingagoodprefetcherishardasprefetchesmustbe\naccurateandtimelywhilecoveringasubstantialportionoftheprogram’smemoryaccessestoderivemeaningfulgains.\nDifferent workloads exhibit different access patterns (stride, pointer-chasing, spatial, temporal), and a prefetcher that\nhelps one workload may hurt another by polluting the cache with useless lines. IPC (instructions per cycle) is an end-\nto-end metric capturing a given application’s performance on a processor. The standard metric to evaluate prefetchers\nis geomean IPCacross a suite of benchmarks where higher is better.\nalphaevolve-champsim-simple automates prefetcher design as an evolutionary discovery loop. In each iteration:\n1. anevolutionarycodingagentproposesacandidateC++prefetchermodule(a structimplementingtheChamp-\nSim prefetcher API),\n2. the candidate iscompiledinto a ChampSim binary on a dedicated build worker,",
+        "metadata": {
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\docs-chialoops-ai-en-latest.pdf",
+          "doc_type": "documentation",
+          "file_name": "docs-chialoops-ai-en-latest.pdf",
+          "chunk_index": 282,
+          "file_type": "pdf"
+        }
+      },
+      {
+        "content": "load Traces suite in the prefetch-enabled case with Policy61 and\nPolicy62 showing consistently strong performance compared to\nprior work.\nIn our understanding, the trend inversion between Mocking-\njay, SHiP, and LRU, and the strong performance of Policy61 and\nPolicy62—simpler policies derived from Mockingjay—can be at-\ntributed to the unique characteristics of these hyperscale workloads,\n8",
+        "metadata": {
+          "file_type": "pdf",
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\2602.22425v1.pdf",
+          "chunk_index": 54,
+          "doc_type": "documentation",
+          "file_name": "2602.22425v1.pdf"
+        }
+      },
+      {
+        "content": "Disaggregated serving architectures, such as Splitwise [174] and DistServe [272], decouple these stages onto separate\nhardware instances to optimize for their distinct compute and memory-bandwidth profiles. This separation allows for\nindependent scaling and prevents high-latency prefill bursts from stalling ongoing decoding streams. These systems are\noften evaluated using simulators like VIDUR [4] to navigate the trade-offs between throughput and time-to-first-token.\nIn parallel, specialized frameworks now support multi-adapter batching and chunked prefill to further increase utilization\nin multi-tenant environments.\n4.4.4 Opportunities\nAs LLMs evolve toward longer contexts, richer reasoning, and alternative generation paradigms, system bottlenecks\ncontinue to shift. Scaling test-time compute for reasoning-heavy workloads requires schedulers that can allocate variable\ncompute budgets and manage extended thinking traces. Training and serving are also becoming more tightly coupled, as",
+        "metadata": {
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\2602.15241v1.pdf",
+          "doc_type": "documentation",
+          "file_type": "pdf",
+          "chunk_index": 160,
+          "file_name": "2602.15241v1.pdf"
+        }
+      }
+    ],
+    "retrieved_loops": []
+  }
+}

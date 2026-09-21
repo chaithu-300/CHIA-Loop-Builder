@@ -1,0 +1,231 @@
+{
+  "query": "Create an evolutionary loop to optimize the L2 cache size and L1 prefetcher for a memory-intensive workload. STRICT REQUIREMENT: You MUST include 'champsim' in the tools_used array and map it correctly in the simulation node.",
+  "generated_loop": {
+    "name": "Evolutionary L2 Cache Size and L1 Prefetcher Optimization Loop",
+    "description": "An evolutionary loop that iteratively explores L2 cache size and L1 data prefetcher configurations for a memory‑intensive workload, using ChampSim to evaluate IPC and selecting the best configurations over a fixed number of generations.",
+    "node_types": [
+      "input",
+      "agent",
+      "simulator",
+      "evaluator",
+      "optimizer",
+      "condition",
+      "state_updater",
+      "output"
+    ],
+    "tools_used": [
+      "champsim",
+      "trace_analyzer",
+      "perf_evaluator"
+    ],
+    "state_schema": {
+      "current_config": {
+        "l2_size_kb": "integer",
+        "l1_prefetcher": "string"
+      },
+      "iteration": "integer",
+      "max_iterations": "integer",
+      "best_ipc": "number",
+      "metrics_history": [
+        {
+          "iteration": "integer",
+          "config": {
+            "l2_size_kb": "integer",
+            "l1_prefetcher": "string"
+          },
+          "ipc": "number"
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": "init_state",
+        "type": "input",
+        "description": "Initialize loop state with default configuration and parameters.",
+        "config": {
+          "initial_l2_kb": 512,
+          "l1_prefetcher_options": [
+            "none",
+            "next_line"
+          ],
+          "max_iterations": 20,
+          "population_size": 10
+        }
+      },
+      {
+        "id": "generate_population",
+        "type": "agent",
+        "description": "Generate a population of candidate configurations (L2 size, L1 prefetcher).",
+        "config": {
+          "l2_size_options_kb": [
+            256,
+            512,
+            1024,
+            2048
+          ],
+          "prefetcher_options": [
+            "none",
+            "next_line"
+          ]
+        }
+      },
+      {
+        "id": "simulate",
+        "type": "simulator",
+        "description": "Run ChampSim simulation for each candidate configuration.",
+        "tool": "champsim",
+        "config": {
+          "trace": "spec2006_mix.trace",
+          "simulation_mode": "fast"
+        }
+      },
+      {
+        "id": "evaluate",
+        "type": "evaluator",
+        "description": "Extract IPC metric from ChampSim output.",
+        "tool": "perf_evaluator",
+        "config": {
+          "metric": "ipc"
+        }
+      },
+      {
+        "id": "select_best",
+        "type": "optimizer",
+        "description": "Select top candidates and apply mutation/crossover to create next generation.",
+        "config": {
+          "selection_rate": 0.2,
+          "mutation_rate": 0.1,
+          "crossover_rate": 0.7
+        }
+      },
+      {
+        "id": "check_termination",
+        "type": "condition",
+        "description": "Determine whether to continue evolving or finish.",
+        "config": {
+          "improvement_threshold": 0.001
+        }
+      },
+      {
+        "id": "update_state",
+        "type": "state_updater",
+        "description": "Update loop state with new best configuration, record metrics, and increment iteration counter.",
+        "config": {}
+      },
+      {
+        "id": "output_results",
+        "type": "output",
+        "description": "Write final best configuration and performance metrics to a JSON file.",
+        "config": {
+          "output_path": "best_config.json"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "init_state",
+        "target": "generate_population"
+      },
+      {
+        "source": "generate_population",
+        "target": "simulate"
+      },
+      {
+        "source": "simulate",
+        "target": "evaluate"
+      },
+      {
+        "source": "evaluate",
+        "target": "select_best"
+      },
+      {
+        "source": "select_best",
+        "target": "check_termination"
+      },
+      {
+        "source": "check_termination",
+        "target": "update_state",
+        "condition": "iteration < max_iterations"
+      },
+      {
+        "source": "check_termination",
+        "target": "output_results",
+        "condition": "iteration >= max_iterations"
+      },
+      {
+        "source": "update_state",
+        "target": "generate_population"
+      }
+    ]
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "details": {
+      "node_count": 8,
+      "edge_count": 8,
+      "node_types": [
+        "agent",
+        "condition",
+        "evaluator",
+        "input",
+        "optimizer",
+        "output",
+        "simulator",
+        "state_updater"
+      ],
+      "tools_used": [
+        "champsim",
+        "perf_evaluator"
+      ],
+      "nodes": [
+        "check_termination",
+        "evaluate",
+        "generate_population",
+        "init_state",
+        "output_results",
+        "select_best",
+        "simulate",
+        "update_state"
+      ]
+    }
+  },
+  "retrieved_context": {
+    "docs_count": 3,
+    "loops_count": 0,
+    "retrieved_docs": [
+      {
+        "content": "--- Page 4 ---\nGupta et al.\nTable 1: Simulated ChampSim memory system configura-\ntions obtained from the 2nd Cache Replacement Champi-\nonship.\nParameter\nSingle-Core Config. Multi-Core Config. (4 Cores)\nPrefetch Prefetch\nDisabled Enabled Disabled Enabled\nCache Sizes L1 Data 48 KiB 48 KiB 48 KiB 48 KiB\nL1 Instruction 32 KiB 32 KiB 32 KiB 32 KiB\nL2 (Per Core) 512 KiB 512 KiB 512 KiB 512 KiB\nLLC (Shared) 2 MiB 2 MiB 8 MiB 8 MiB\nPrefetchers L1 Data - Next Line - Next Line\nL2 (Per Core) - PC Stride - PC Stride\nDRAM Bandwidth 25.6 GB/s 25.6 GB/s 25.6 GB/s 25.6 GB/s\n3.3 Workloads and ChampSim Hardware\nConfigurations\nThe choice of workload that can be fed to ChampSim in ArchAgent\nis flexible. In this case, we selected both SPEC 2006 and Google\nWorkload Traces Version 2, representing a mix of publicly-available\nworkloads with a variety of memory-traffic characteristics. These\nSPEC 2006 traces, obtained from CRC-2, use SimPoints [50] on mul-",
+        "metadata": {
+          "doc_type": "documentation",
+          "chunk_index": 24,
+          "file_name": "2602.22425v1.pdf",
+          "file_type": "pdf",
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\2602.22425v1.pdf"
+        }
+      },
+      {
+        "content": "ized to LRU compared to prior winners are typically reported to\nbe in the range of 1% to 3%, for single-core ChampSim configura-\ntions across various mixes of workloads (including SPEC, GAP [6],\nCVP1 [49], and more). For direct comparison, Mockingjay [56], the\nprior state-of-the-art cache replacement policy, saw a1.6% and 1.2%\nincrease in single-core performance normalized to LRU over Hawk-\neye [23] across a memory-intensive subset of SPEC 2006 workloads,\nwithout prefetching and with prefetching, respectively. We make\ntwo observations across the winning policies:\n• The winning margins are typically small and are getting\nsmaller, which attests to the difficulty of the problem do-\nmain and the expectation that the headroom is shrinking.\n• Nevertheless, the field of cache replacement has progressed\ngradually with wins in the 1%-3% range accumulating over\ntime. However, each advance requires a concerted effort,\nwith (usually) multiple researchers studying the problem",
+        "metadata": {
+          "chunk_index": 17,
+          "doc_type": "documentation",
+          "file_name": "2602.22425v1.pdf",
+          "file_type": "pdf",
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\2602.22425v1.pdf"
+        }
+      },
+      {
+        "content": "modelsandinterpretations, confirmingthattheywerenotonlycorrectbutcapturedthekeyarchitecturalinsightsofthe\noriginal papers. Specifically, the models produces human-understandable insights from the ISCA 2009 classic Anton\npaper [34], Darwin Genomics accelerator papers [35], Google’s VCU paper [36], and the more recent Craterlake paper\nwhichperformsFHEacceleration[37]. Thefullsetofmodelsandinsightsisavailableonrequest.\nWeoutlinenexttwomoreexamplesofLLM-basedquantitativeevaluationtoolconstruction.\nExtending Cycle-Accurate Simulation.We fed the ChampSim simulation framework along with research papers\ndescribing nine different microarchitectural techniques spanning branch prediction, L1/L2 cache replacement policies,\nand prefetching policies. In all cases, Claude generated correct, integrated implementations in 10–20 minutes. Each\nimplementation included novel data structures, integration with the simulation framework’s APIs, and functional vali-",
+        "metadata": {
+          "doc_type": "documentation",
+          "chunk_index": 56,
+          "source": "C:\\Users\\B. Chaithanya\\OneDrive\\Desktop\\CHIA\\CHIA_RAG\\data\\docs\\2604.03312v1.pdf",
+          "file_name": "2604.03312v1.pdf",
+          "file_type": "pdf"
+        }
+      }
+    ],
+    "retrieved_loops": []
+  }
+}
