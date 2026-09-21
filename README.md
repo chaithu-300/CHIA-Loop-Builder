@@ -45,3 +45,6 @@ See `paper/` for full results.
 
 ## Team
 B. Chaithanya (Student, Karnataka, India)
+Aditya sivaji permulla 
+Tamilarsi K
+Thrisha KV
